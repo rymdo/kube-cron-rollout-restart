@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	"github.com/rymdo/kube-cron-rollout-restart/v2/src/kubernetes"
@@ -9,7 +10,12 @@ import (
 )
 
 func main() {
-	k := kubernetes.New()
+	useKubeConfig := false
+	if os.Getenv("USE_KUBECONFIG") == "true" {
+		useKubeConfig = true
+	}
+
+	k := kubernetes.New(useKubeConfig)
 	s := scheduler.New(func(job types.Job) {
 		k.RolloutRestart(job)
 	})

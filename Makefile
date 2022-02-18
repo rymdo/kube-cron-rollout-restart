@@ -18,4 +18,4 @@ build:
 	docker images $(shell basename $(CURDIR))
 
 run: clean build
-	docker run --rm $(shell basename $(CURDIR)):latest-$(HOST_ARCH)
+	docker run -e USE_KUBECONFIG=true -v ~/.kube/config:/.kube/config --rm $(shell basename $(CURDIR)):latest-$(HOST_ARCH)
