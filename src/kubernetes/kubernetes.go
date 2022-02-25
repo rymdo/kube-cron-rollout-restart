@@ -2,9 +2,8 @@ package kubernetes
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/rymdo/kube-cron-rollout-restart/v2/src/types"
@@ -13,20 +12,26 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 const AnnotationScheduleKey = "cron.rollout.restart/schedule"
+
+const AnnotationAlertmanagerSilenceEnabledKey = "cron.rollout.restart/alertmanger-silence-enabled"   // "true" or "false", default "false"
+const AnnotationAlertmanagerSilenceDurationKey = "cron.rollout.restart/alertmanger-silence-duration" // duration in minutes
+const AnnotationAlertmanagerSilenceLabelsKey = "cron.rollout.restart/alertmanger-silence-labels"     // comma separated silence matching labels, eg. key1=value1,key2=value2
+const AnnotationAlertmanagerSilenceCommentKey = "cron.rollout.restart/alertmanger-silence-comment"   // comment
 
 type Kubernetes struct {
 	client *kubernetes.Clientset
 }
 
-func New(useKubeConfig bool) Kubernetes {
+func New(kubeconfigUse bool, kubeconfigPath string) Kubernetes {
 	var config *rest.Config
-	if useKubeConfig {
-		config = configKubeconfig()
+	if kubeconfigUse {
+		fmt.Printf("kubernetes: using kubeconfig mode - '%s'\n", kubeconfigPath)
+		config = configKubeconfig(kubeconfigPath)
 	} else {
+		fmt.Println("kubernetes: using in-cluster mode")
 		config = configInCluster()
 	}
 	clientset, err := kubernetes.NewForConfig(config)
@@ -46,21 +51,44 @@ func configInCluster() *rest.Config {
 	return config
 }
 
-func configKubeconfig() *rest.Config {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+func configKubeconfig(kubeconfigPath string) *rest.Config {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		panic(err.Error())
 	}
 	return config
+}
+
+func parseAlertmangerSilence(annotations map[string]string) *types.AlertmangerSilence {
+	// Check if enabled
+	enabled := false
+	duration := 0
+	labels := ""
+	comment := ""
+	for key, value := range annotations {
+		if key == AnnotationAlertmanagerSilenceEnabledKey {
+			enabled = value == "true"
+		}
+		if key == AnnotationAlertmanagerSilenceDurationKey {
+			if i, err := strconv.Atoi(value); err == nil {
+				duration = i
+			}
+		}
+		if key == AnnotationAlertmanagerSilenceLabelsKey {
+			labels = value
+		}
+		if key == AnnotationAlertmanagerSilenceCommentKey {
+			comment = value
+		}
+	}
+	if !enabled {
+		return nil
+	}
+	return &types.AlertmangerSilence{
+		Duration: duration,
+		Labels:   labels,
+		Comment:  comment,
+	}
 }
 
 func (k *Kubernetes) GetJobs() []types.Job {
@@ -74,10 +102,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range deployment.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace: deployment.Namespace,
-					Type:      "deployment",
-					Workload:  deployment.Name,
-					Schedule:  value,
+					Namespace:          deployment.Namespace,
+					Type:               "deployment",
+					Workload:           deployment.Name,
+					Schedule:           value,
+					AlertmangerSilence: parseAlertmangerSilence(deployment.Annotations),
 				})
 			}
 		}
@@ -91,10 +120,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range statefulset.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace: statefulset.Namespace,
-					Type:      "statefulset",
-					Workload:  statefulset.Name,
-					Schedule:  value,
+					Namespace:          statefulset.Namespace,
+					Type:               "statefulset",
+					Workload:           statefulset.Name,
+					Schedule:           value,
+					AlertmangerSilence: parseAlertmangerSilence(statefulset.Annotations),
 				})
 			}
 		}
@@ -108,10 +138,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range daemonset.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace: daemonset.Namespace,
-					Type:      "daemonset",
-					Workload:  daemonset.Name,
-					Schedule:  value,
+					Namespace:          daemonset.Namespace,
+					Type:               "daemonset",
+					Workload:           daemonset.Name,
+					Schedule:           value,
+					AlertmangerSilence: parseAlertmangerSilence(daemonset.Annotations),
 				})
 			}
 		}
