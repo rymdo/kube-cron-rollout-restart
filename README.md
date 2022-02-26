@@ -19,13 +19,13 @@ The kube-cron-rollout-restart is used to restart workloads in a kubernetes clust
 
 Use these annotations on the workload
 
-| Name                                                | Value             | Description                                                                                                                      |
-| --------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `cron.rollout.restart/schedule`                     | `<cron-schedule>` | Full CRON Schedule. Eg. `"0 12 * * 1-5"` will restart the workload every weekday at 12:00 (`https://crontab.guru/#0_12_*_*_1-5`) |
-| `cron.rollout.restart/alertmanger-silence-enabled`  | `true` \| `false` | Enable/Disable Alertmanager Silence for workload. Default is `"false"`                                                           |
-| `cron.rollout.restart/alertmanger-silence-duration` | `<duration>`      | Duration in minutes. (Default `"15"`)                                                                                            |
-| `cron.rollout.restart/alertmanger-silence-labels`   | `<labels>`        | Comma separated silence matching labels, eg. `"key1=value1,key2=value2"`                                                         |
-| `cron.rollout.restart/alertmanger-silence-comment`  | `<comment>`       | Comment for the silence. (Default `"kube-cron-rollout-restart"`)                                                                 |
+| Name                                                 | Value             | Description                                                                                                                      |
+| ---------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `cron.rollout.restart/schedule`                      | `<cron-schedule>` | Full CRON Schedule. Eg. `"0 12 * * 1-5"` will restart the workload every weekday at 12:00 (`https://crontab.guru/#0_12_*_*_1-5`) |
+| `cron.rollout.restart/alertmanager-silence-enabled`  | `true`\|`false`   | Enable/Disable Alertmanager Silence for workload. Default is `"false"`                                                           |
+| `cron.rollout.restart/alertmanager-silence-duration` | `<duration>`      | Duration in minutes. (Default `"15"`)                                                                                            |
+| `cron.rollout.restart/alertmanager-silence-labels`   | `<labels>`        | Comma separated silence matching labels, eg. `"key1=value1,key2=value2"`                                                         |
+| `cron.rollout.restart/alertmanager-silence-comment`  | `<comment>`       | Comment for the silence. (Default `"kube-cron-rollout-restart"`)                                                                 |
 
 ### RBAC
 
@@ -33,7 +33,7 @@ Use these annotations on the workload
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: secret-reader
+  name: kube-cron-rollout-restart
 rules:
 - apiGroups: ["apps"]
   resources: ["deployments", "statefulsets", "daemonsets"]

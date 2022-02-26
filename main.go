@@ -28,7 +28,7 @@ func getDefaultKubeconfigDir() string {
 var (
 	kubeconfigUse   = kingpin.Flag("kubeconfig", "use kubeconfig").Bool()
 	kubeconfigPath  = kingpin.Flag("kubeconfig-path", "path to kubeconfig").Default(getDefaultKubeconfigDir()).String()
-	alertmanagerUrl = kingpin.Flag("alertmanager-url", "url to alertmanger").Default("http://alertmanager:80").String()
+	alertmanagerUrl = kingpin.Flag("alertmanager-url", "url to alertmanager").Default("http://alertmanager:80").String()
 )
 
 func main() {
@@ -39,8 +39,8 @@ func main() {
 	a := alertmanager.New(alertmanager.Config{Url: *alertmanagerUrl})
 	k := kubernetes.New(*kubeconfigUse, *kubeconfigPath)
 	s := scheduler.New(func(job types.Job) {
-		if job.AlertmangerSilence != nil {
-			err := a.CreateSilence(*job.AlertmangerSilence)
+		if job.AlertmanagerSilence != nil {
+			err := a.CreateSilence(*job.AlertmanagerSilence)
 			if err != nil {
 				fmt.Printf("scheduler/alertmanager: error %s\n", err.Error())
 			}

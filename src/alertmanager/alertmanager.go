@@ -61,7 +61,7 @@ func parseLabels(labelsStr string) map[string]string {
 	return results
 }
 
-func generateSilence(silenceSource types.AlertmangerSilence) Silence {
+func generateSilence(silenceSource types.AlertmanagerSilence) Silence {
 	comment := silenceSource.Comment
 	if comment == "" {
 		comment = "kube-cron-rollout-restart"
@@ -111,7 +111,7 @@ func httpPost(url, data string, result chan<- error) {
 	result <- nil
 }
 
-func (a *Alertmanager) CreateSilence(silenceSource types.AlertmangerSilence) error {
+func (a *Alertmanager) CreateSilence(silenceSource types.AlertmanagerSilence) error {
 	timeout := 3
 
 	silence := generateSilence(silenceSource)

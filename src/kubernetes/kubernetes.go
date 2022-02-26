@@ -16,10 +16,10 @@ import (
 
 const AnnotationScheduleKey = "cron.rollout.restart/schedule"
 
-const AnnotationAlertmanagerSilenceEnabledKey = "cron.rollout.restart/alertmanger-silence-enabled"   // "true" or "false", default "false"
-const AnnotationAlertmanagerSilenceDurationKey = "cron.rollout.restart/alertmanger-silence-duration" // duration in minutes
-const AnnotationAlertmanagerSilenceLabelsKey = "cron.rollout.restart/alertmanger-silence-labels"     // comma separated silence matching labels, eg. key1=value1,key2=value2
-const AnnotationAlertmanagerSilenceCommentKey = "cron.rollout.restart/alertmanger-silence-comment"   // comment
+const AnnotationAlertmanagerSilenceEnabledKey = "cron.rollout.restart/alertmanager-silence-enabled"   // "true" or "false", default "false"
+const AnnotationAlertmanagerSilenceDurationKey = "cron.rollout.restart/alertmanager-silence-duration" // duration in minutes
+const AnnotationAlertmanagerSilenceLabelsKey = "cron.rollout.restart/alertmanager-silence-labels"     // comma separated silence matching labels, eg. key1=value1,key2=value2
+const AnnotationAlertmanagerSilenceCommentKey = "cron.rollout.restart/alertmanager-silence-comment"   // comment
 
 type Kubernetes struct {
 	client *kubernetes.Clientset
@@ -59,7 +59,7 @@ func configKubeconfig(kubeconfigPath string) *rest.Config {
 	return config
 }
 
-func parseAlertmangerSilence(annotations map[string]string) *types.AlertmangerSilence {
+func parseAlertmanagerSilence(annotations map[string]string) *types.AlertmanagerSilence {
 	// Check if enabled
 	enabled := false
 	duration := 0
@@ -84,7 +84,7 @@ func parseAlertmangerSilence(annotations map[string]string) *types.AlertmangerSi
 	if !enabled {
 		return nil
 	}
-	return &types.AlertmangerSilence{
+	return &types.AlertmanagerSilence{
 		Duration: duration,
 		Labels:   labels,
 		Comment:  comment,
@@ -102,11 +102,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range deployment.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace:          deployment.Namespace,
-					Type:               "deployment",
-					Workload:           deployment.Name,
-					Schedule:           value,
-					AlertmangerSilence: parseAlertmangerSilence(deployment.Annotations),
+					Namespace:           deployment.Namespace,
+					Type:                "deployment",
+					Workload:            deployment.Name,
+					Schedule:            value,
+					AlertmanagerSilence: parseAlertmanagerSilence(deployment.Annotations),
 				})
 			}
 		}
@@ -120,11 +120,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range statefulset.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace:          statefulset.Namespace,
-					Type:               "statefulset",
-					Workload:           statefulset.Name,
-					Schedule:           value,
-					AlertmangerSilence: parseAlertmangerSilence(statefulset.Annotations),
+					Namespace:           statefulset.Namespace,
+					Type:                "statefulset",
+					Workload:            statefulset.Name,
+					Schedule:            value,
+					AlertmanagerSilence: parseAlertmanagerSilence(statefulset.Annotations),
 				})
 			}
 		}
@@ -138,11 +138,11 @@ func (k *Kubernetes) GetJobs() []types.Job {
 		for key, value := range daemonset.Annotations {
 			if key == AnnotationScheduleKey {
 				jobs = append(jobs, types.Job{
-					Namespace:          daemonset.Namespace,
-					Type:               "daemonset",
-					Workload:           daemonset.Name,
-					Schedule:           value,
-					AlertmangerSilence: parseAlertmangerSilence(daemonset.Annotations),
+					Namespace:           daemonset.Namespace,
+					Type:                "daemonset",
+					Workload:            daemonset.Name,
+					Schedule:            value,
+					AlertmanagerSilence: parseAlertmanagerSilence(daemonset.Annotations),
 				})
 			}
 		}
