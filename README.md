@@ -7,11 +7,11 @@ The kube-cron-rollout-restart is used to restart workloads in a kubernetes clust
 ### Launch Parameters
 
 ```
-  -kubeconfig
+  --kubeconfig
         use kubeconfig (default is in-cluster)
-  -kubeconfig-path
+  --kubeconfig-path
         path to kubeconfig (default "<HOME>/.kube/config")
-  -alertmanager-url
+  --alertmanager-url
         url to alertmanager (default "http://alertmanager:80")
 ```
 
@@ -26,6 +26,19 @@ Use these annotations on the workload
 | `cron.rollout.restart/alertmanger-silence-duration` | `<duration>`      | Duration in minutes. (Default `"15"`)                                                                                            |
 | `cron.rollout.restart/alertmanger-silence-labels`   | `<labels>`        | Comma separated silence matching labels, eg. `"key1=value1,key2=value2"`                                                         |
 | `cron.rollout.restart/alertmanger-silence-comment`  | `<comment>`       | Comment for the silence. (Default `"kube-cron-rollout-restart"`)                                                                 |
+
+### RBAC
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-reader
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["list", "get", "patch"]
+```
 
 ## Links
 
